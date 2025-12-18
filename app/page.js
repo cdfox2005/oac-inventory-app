@@ -44,27 +44,28 @@ useEffect(() => {
 }, [])
 
 const addItem = async (item) => { //adds new item to Firestore
-    const docRef = doc(collection(firestore, 'inventory'), item) //references new doc
+    const name = item?.trim()
+    if (!name) return
+    const docRef = doc(collection(firestore, 'inventory'), name.toLowerCase()) //use normalized id
     const docSnap = await getDoc(docRef) //checks if doc already exists
     if (docSnap.exists()) {
-        const { quantity } = docSnap.data()
-        await setDoc(docRef, { quantity: quantity + 1 }) //increments quantity if exists
+        const { quantity = 0 } = docSnap.data()
+        await setDoc(docRef, { quantity: quantity + 1 }, { merge: true }) //increment quantity
     } else {
         await setDoc(docRef, { quantity: 1 }) //creates new doc with quantity 1
     }
     await updateInventory() //refreshes inventory list
 }
 
-const removeItem = async (item) => { //removes item from Firestore
-    const docRef = doc(collection(firestore, 'inventory'), item) //references doc
-    await deleteDoc(docRef) //deletes doc
-    if (docSnap.exists()) {
-        const { quantity } = docSnap.data()
-        if (quantity == 1) {
-            await deleteDoc(docRef) //deletes doc if quantity is 1
-        } else {
-            await setDoc(docRef, { quantity: quantity - 1 }) //decrements quantity
-        }
+const removeItem = async (item) => { //removes or decrements item in Firestore
+    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docSnap = await getDoc(docRef)
+    if (!docSnap.exists()) return
+    const { quantity = 0 } = docSnap.data()
+    if (quantity <= 1) {
+        await deleteDoc(docRef)
+    } else {
+        await setDoc(docRef, { quantity: quantity - 1 }, { merge: true })
     }
     await updateInventory() //refreshes inventory list
 }
@@ -125,19 +126,19 @@ return (
               </Typography>
           </Box>
           <Stack width="800px" height="300px" spacing={2} overflow="auto">
-              {inventory.map(((name, quantity) => (
-                  <Box key={name} width="100%" minHeight={'150px'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} bgcolor={'#f0f0f0'} paddingX={5}>
+              {inventory.map((item) => (
+                  <Box key={item.name} width="100%" minHeight={'150px'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} bgcolor={'#f0f0f0'} paddingX={5}>
                       <Typography variant={'h3'} color='#333' textAlign={'center'}>
-                          {name.charAt(0).toUpperCase() + name.slice(1)}
+                          {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
                       </Typography>
                       <Typography variant='h3' color='#333' textAlign={'center'}>
-                          Quantity: {quantity}
+                          Quantity: {item.quantity}
                       </Typography>
-                      <Button variant='contained' onClick={() => removeItem(name)}>
+                      <Button variant='contained' onClick={() => removeItem(item.name)}>
                           Remove
                       </Button>
                   </Box>
-              )))}
+              ))}
           </Stack>
       </Box>
   </Box>
