@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material'
 import { firestore } from '@/firebase'
+import { v4 as uuidv4 } from 'uuid'
 import {
   collection,
   doc,
@@ -29,8 +30,8 @@ const style = {
 }
 
 export default function Home() {
-    const updateInventory = async () => {
-  const snapshot = query(collection(firestore, 'inventory'))
+  const updateInventory = async () => {
+  const snapshot = query(collection(firestore, 'tents'))
   const docs = await getDocs(snapshot)
   const inventoryList = []
   docs.forEach((doc) => {
@@ -46,19 +47,16 @@ useEffect(() => {
 const addItem = async (item) => { //adds new item to Firestore
     const name = item?.trim()
     if (!name) return
-    const docRef = doc(collection(firestore, 'inventory'), name.toLowerCase()) //use normalized id
+    const docRef = doc(collection(firestore, 'tents'), uuidv4()) //use normalized id
     const docSnap = await getDoc(docRef) //checks if doc already exists
-    if (docSnap.exists()) {
-        const { quantity = 0 } = docSnap.data()
-        await setDoc(docRef, { quantity: quantity + 1 }, { merge: true }) //increment quantity
-    } else {
-        await setDoc(docRef, { quantity: 1 }) //creates new doc with quantity 1
-    }
+    
+    await setDoc(docRef, { name: name, oac_num: 0, in_stock: true, loaned: false, details: "", leader_signout: "", loaned_to: "" }) //creates new doc with quantity 1
+    
     await updateInventory() //refreshes inventory list
 }
 
 const removeItem = async (item) => { //removes or decrements item in Firestore
-    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docRef = doc(collection(firestore, 'tents'), item)
     const docSnap = await getDoc(docRef)
     if (!docSnap.exists()) return
     const { quantity = 0 } = docSnap.data()
@@ -85,6 +83,7 @@ return (
    flexDirection={'column'}
    alignItems={'center'}
    gap={2}
+   overflow={'auto'}
   >
       <Modal
       open={open}
@@ -92,7 +91,7 @@ return (
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-      <Box sx={style}>
+      <Box sx={style} overflow={'auto'}>
           <Typography id = "modal-modal-title" variant="h6" component="h2">
               Add New Item
           </Typography>
@@ -120,19 +119,29 @@ return (
           Add New Item
       </Button>
       <Box border={'1px solid #333'}>
-          <Box width="800px" height={'100px'} bgcolor={'#ADD8E6'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
-              <Typography variant="h2" color="#333" textAlign={'center'}>
-                  Inventory Items
+          <Box width="1250px" height={'100px'} bgcolor={'#ADD8E6'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} paddingX={5}>
+              <Typography variant="h6" color="#333" textAlign={'center'}>
+                  Tents
               </Typography>
+              <Typography variant="body1" color="#333" textAlign={'center'}>
+                  OAC Number
+              </Typography>
+              <Typography variant="body1" color="#333" textAlign={'center'}>
+                  Available?
+              </Typography>
+
           </Box>
-          <Stack width="800px" height="300px" spacing={2} overflow="auto">
+          <Stack width="fill" height="700px" overflow="auto">
               {inventory.map((item) => (
-                  <Box key={item.name} width="100%" minHeight={'150px'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} bgcolor={'#f0f0f0'} paddingX={5}>
-                      <Typography variant={'h3'} color='#333' textAlign={'center'}>
+                  <Box key={item.name} width="100%" minHeight={'50px'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} bgcolor={'#f0f0f0'} paddingX={5}>
+                      <Typography variant={'h6'} color='#333' textAlign={'left'}>
                           {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
                       </Typography>
-                      <Typography variant='h3' color='#333' textAlign={'center'}>
-                          Quantity: {item.quantity}
+                      <Typography variant='body1' color='#333' textAlign={'center'}>
+                          {item.oac_num}
+                      </Typography>
+                      <Typography variant='body1' color='#333' textAlign={'center'}>
+                            {item.in_stock}
                       </Typography>
                       <Button variant='contained' onClick={() => removeItem(item.name)}>
                           Remove
