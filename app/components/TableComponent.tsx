@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react'
+import { alpha } from '@mui/material/styles';
 import { collection, onSnapshot, query } from 'firebase/firestore'
 import { firestore } from '@/firebase'
 import { Table, TableBody, TableCell, TableContainer, TableHead, 
-    TablePagination, TableRow, Paper, Typography, Box, Collapse, IconButton} from '@mui/material'
+    TablePagination, TableRow, Paper, Typography, Box, Collapse, IconButton,
+    Toolbar, TableSortLabel, Tooltip, FormControlLabel, Switch} from '@mui/material'
 import { TableVirtuoso, TableComponents } from 'react-virtuoso';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import { visuallyHidden } from '@mui/utils';
 
 interface Data {
     id: string;
@@ -42,6 +47,7 @@ const columns: ColumnData[] = [
 ]
 
 const rowsInitial: Data[] = []
+
 
 const VirtuosoTableComponents: TableComponents<Data> = {
     Scroller: React.forwardRef<HTMLDivElement>((props, ref) => (
@@ -119,13 +125,14 @@ function rowContent(_index: number, row: Data) {
     )
 }
 
-export default function ReactVirtualizedTable() {
+export default function ReactVirtualizedTable(props: { table: string; }) {
+    const { table } = props
     const [rows, setRows] = useState<Data[]>(rowsInitial)
     // rows actually passed to Virtuoso (includes inserted detail rows)
     const [displayRows, setDisplayRows] = useState<Array<Data | DetailRow>>([])
 
     useEffect(() => {
-        const q = query(collection(firestore, 'tents'))
+        const q = query(collection(firestore, table))
         const unsubscribe = onSnapshot(q, (snap) => {
             const items: Data[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
                 setRows(items)
@@ -210,7 +217,7 @@ export default function ReactVirtualizedTable() {
              data={displayRows}
              components={VirtuosoTableComponents}
              fixedHeaderContent={fixedHeaderContent}
-              itemContent={itemContent}
+             itemContent={itemContent}
              />
         </Paper>
     )

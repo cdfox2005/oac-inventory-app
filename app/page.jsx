@@ -5,7 +5,7 @@ import { Box, Stack, Typography, Button, Modal, TextField,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material'
 import { firestore } from '@/firebase'
 import { v4 as uuidv4 } from 'uuid'
-import ReactVirtualizedTable from './components/TableComponent'
+import { TabbedTables } from './components/TabbedTable'
 import {
   collection,
   doc,
@@ -115,7 +115,7 @@ return (
           Add New Item
       </Button>
       <Box border={'1px solid #333'}>
-          <ReactVirtualizedTable/>
+          <TabbedTables/>
       </Box>
   </Box>
   )
