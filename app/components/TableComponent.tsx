@@ -82,19 +82,48 @@ export default function ReactVirtualizedTable(props: { table: string; }) {
             const va = a[key]
             const vb = b[key]
 
-            if (va == null && vb == null) return 0
+            const compareOac = (x: Data, y: Data) => {
+                const na = typeof x.oac_num === 'number' ? x.oac_num : Number(x.oac_num)
+                const nb = typeof y.oac_num === 'number' ? y.oac_num : Number(y.oac_num)
+                const naIsNaN = Number.isNaN(na)
+                const nbIsNaN = Number.isNaN(nb)
+                if (naIsNaN && nbIsNaN) return 0
+                if (naIsNaN) return -1
+                if (nbIsNaN) return 1
+                return na - nb
+            }
+
+            if (va == null && vb == null) {
+                return compareOac(a, b)
+            }
             if (va == null) return direction === 'ascending' ? -1 : 1
             if (vb == null) return direction === 'ascending' ? 1 : -1
 
+            // special-case known numeric column(s)
+            if (key === 'oac_num') {
+                const na = typeof va === 'number' ? va : Number(va)
+                const nb = typeof vb === 'number' ? vb : Number(vb)
+                const naIsNaN = Number.isNaN(na)
+                const nbIsNaN = Number.isNaN(nb)
+                if (naIsNaN && nbIsNaN) return 0
+                if (naIsNaN) return direction === 'ascending' ? -1 : 1
+                if (nbIsNaN) return direction === 'ascending' ? 1 : -1
+                return direction === 'ascending' ? (na - nb) : (nb - na)
+            }
+
+            // fallback: numeric values first, then string compare
             if (typeof va === 'number' && typeof vb === 'number') {
-                return direction === 'ascending' ? va - vb : vb - va
+                const cmp = direction === 'ascending' ? va - vb : vb - va
+                if (cmp !== 0) return cmp
             }
 
             const sa = String(va).toLowerCase()
             const sb = String(vb).toLowerCase()
             if (sa < sb) return direction === 'ascending' ? -1 : 1
             if (sa > sb) return direction === 'ascending' ? 1 : -1
-            return 0
+
+            // primary fields are equal -> secondary sort by numeric `oac_num` (ascending)
+            return compareOac(a, b)
         })
 
         setRows(sortedRows)
@@ -107,13 +136,21 @@ export default function ReactVirtualizedTable(props: { table: string; }) {
         const q = query(collection(firestore, table))
         const unsubscribe = onSnapshot(q, (snap) => {
             const items: Data[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
-            // sort immediately by name (ascending)
+            // sort immediately by name (ascending) with secondary numeric `oac_num`
             const sortedItems = [...items].sort((a, b) => {
                 const sa = String(a.name ?? '').toLowerCase()
                 const sb = String(b.name ?? '').toLowerCase()
                 if (sa < sb) return -1
                 if (sa > sb) return 1
-                return 0
+
+                const na = typeof a.oac_num === 'number' ? a.oac_num : Number(a.oac_num)
+                const nb = typeof b.oac_num === 'number' ? b.oac_num : Number(b.oac_num)
+                const naIsNaN = Number.isNaN(na)
+                const nbIsNaN = Number.isNaN(nb)
+                if (naIsNaN && nbIsNaN) return 0
+                if (naIsNaN) return -1
+                if (nbIsNaN) return 1
+                return na - nb
             })
             setRows(sortedItems)
             setDisplayRows(sortedItems)

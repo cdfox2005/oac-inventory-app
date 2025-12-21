@@ -86,7 +86,7 @@ return (
    overflow={'auto'}
    bgcolor={'#000000'}
   >
-      <Modal
+      {/*<Modal
       open={open}
       onClose={handleClose}
       aria-labelledby="modal-modal-title"
@@ -148,7 +148,7 @@ return (
       </Modal>
       <Button variant="contained" onClick={handleOpen}>
           Add New Item
-      </Button>
+      </Button>*/}
       <Box border={'1px solid #333'}>
           <TabbedTables/>
       </Box>
