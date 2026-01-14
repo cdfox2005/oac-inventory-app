@@ -200,17 +200,20 @@ const signOff = async () => {
 }
 
 return (
-  <Box
-   width="100vw"
-   height="100vh"
-   display={'flex'}
-   justifyContent={'center'}
-   flexDirection={'row'}
-   alignItems={'flex-start'}
-   gap={2}
-   overflow={'auto'}
-   bgcolor={'#000000'}
-  >
+    <Box
+        className="full-vh"
+        sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            gap: 2,
+            width: '100%',
+            height: '100%',
+            overflow: 'auto',
+        }}
+        bgcolor={'#000000'}
+    >
       <Modal
       open={open}
       onClose={handleClose}
@@ -279,11 +282,11 @@ return (
               </Stack>
       </Box>
       </Modal>
-      <Box width="50%" minHeight="50%" border="1px solid #333" p={1}>
-          <TabbedTables/>
+      <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, border: '1px solid #333' }} p={1}>
+          <TabbedTables />
       </Box>
 
-      <Box width="50%" minHeight="100%" border="1px solid transparent" p={1}>
+      <Box sx={{ width: 360, flexShrink: 0, minHeight: 0, border: '1px solid transparent' }} p={1}>
             <Stack direction="row" spacing={1} alignItems={'center'}>
                 <TextField label="Current user" InputLabelProps={{style: {color: '#ffff'}}} sx={{input: {color: '#ffff'}}} value={currentUser.displayName ? currentUser.displayName : currentUser.email} size="small"/>
                 <Button variant='contained' onClick={signOff} sx={{width: '100%'}}>Logout</Button>

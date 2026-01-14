@@ -65,21 +65,9 @@ function Register() {
     }
     
     return (
-        <Box 
-            width="100vw"
-            minHeight="100vh"
-            display={'flex'} 
-            justifyContent={'center'}
-            flexDirection={'row'}
-            alignItems={'center'}
-            gap={2}
-            overflow={'auto'}
-            bgcolor={'#000000'}
-            p={1}
-            m={1}
-            borderRadius={1}>
-                {userLoggedIn && (<Navigate to={'/home'} replace={true}/>)}
-                <Stack>
+        <Box className="full-vh" bgcolor="#000000" p={1} m={0}>
+                {userLoggedIn && (<Navigate to={'/home'} replace={true}/>) }
+                <Stack sx={{width: '100%', maxWidth: 520, px: 2}}>
                     <Typography variant='h3'>Sign Up For An OAC Inventory Account</Typography>
                     <Divider/>
                     <form
