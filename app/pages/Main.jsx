@@ -130,7 +130,7 @@ const checkoutSelected = async () => {
         const id = it.id?.itemID
         if (!id) continue
         const docRef = doc(collection(firestore, it.table), id)
-        await setDoc(docRef, {in_stock: false, leader_signout: userId, date: new Date().toISOString()}, { merge: true })
+        await setDoc(docRef, {in_stock: false, leader_signout: currentUser.displayName, date: new Date().toISOString()}, { merge: true })
     }
     await fetchAllInventory()
     closeCheckout()
