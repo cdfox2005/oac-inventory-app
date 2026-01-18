@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Stack, Typography, Button, Modal, TextField, 
+import { Box, Stack, Typography, Button, Modal, TextField, Select, MenuItem, InputLabel, FormControl, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
     Checkbox, FormControlLabel, Divider } from '@mui/material'
 import { firestore } from '@/firebase'
@@ -68,6 +68,18 @@ useEffect(() => {
   fetchAllInventory()
 }, [])
 
+const fetchUsers = async () => {
+    try {
+        const snap = await getDocs(query(collection(firestore, 'users')))
+        const arr = []
+        snap.forEach(d => arr.push({ id: d.id, ...d.data() }))
+        setUsers(arr)
+    } catch (e) {
+        console.error('fetchUsers error', e)
+        setUsers([])
+    }
+}
+
 const addItem = async (item, num, detail, table) => { //adds new item to Firestore
     const name = item?.trim()
     if (!name) return
@@ -100,6 +112,7 @@ const [checkedMap, setCheckedMap] = useState({}) // key: itemID, value: true
 const [isAdmin, setIsAdmin] = useState(false) // set from auth/role in real app
 const [transferTo, setTransferTo] = useState('')
 const [returnOpen, setReturnOpen] = useState(false)
+const [users, setUsers] = useState([])
 
 const toggleCheck = (item) => {
     const id = item?.id?.itemID || item.name
@@ -143,6 +156,7 @@ const canOpenTransfer = () => {
 
 const openTransfer = async () => {
     await fetchAllInventory()
+    await fetchUsers()
     /*if (!canOpenTransfer()) {
         alert('Only admin or current holders of selected items can transfer them.')
         return
@@ -449,8 +463,25 @@ return (
                 ))
             })}
 
-            {/* change to dropdown of all users when user auth is added */}
-            <TextField label="Transfer to (user id/email)" value={transferTo} onChange={(e)=>setTransferTo(e.target.value)} fullWidth/>
+                        {/* change to dropdown of all users when user auth is added */}
+                        <FormControl fullWidth size="small" sx={{mt:1}}>
+                            <InputLabel id="transfer-to-label">Transfer to</InputLabel>
+                            <Select
+                                labelId="transfer-to-label"
+                                value={transferTo}
+                                label="Transfer to"
+                                onChange={(e) => setTransferTo(e.target.value)}
+                            >
+                                <MenuItem value="">
+                                    <em>None</em>
+                                </MenuItem>
+                                {users.map(u => (
+                                    <MenuItem key={u.id} value={u.email || u.id || u.displayName}>
+                                        {u.displayName ? `${u.displayName} (${u.email || u.id})` : (u.email || u.id)}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
             <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
               <Button variant="outlined" onClick={closeTransfer}>Cancel</Button>
